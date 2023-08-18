@@ -18,22 +18,34 @@ class LikesController < ApplicationController
   end
 
   def streaks
+    # Group likes by date and sort by date
     likes_by_date = Like.group(:date).order(:date).count
-    streaks = []
-    streak = []
 
+    # Initialize streaks and the current streak
+    all_streaks    = []
+    current_streak = []
+
+    # Iterate through consecutive dates
     likes_by_date.each_cons(2) do |(prev_date, prev_count), (current_date, current_count)|
       if current_count > prev_count
-        streak << prev_date if streak.empty?
-        streak << current_date
+        current_streak << prev_date if current_streak.empty?
+        current_streak << current_date
       else
-        streaks << streak if streak.length > 1
-        streak = []
+        # End of streak, add it to all streaks if valid
+        if current_streak.length > 1
+          all_streaks << { start: current_streak.first, end: current_streak.last }
+        end
+        current_streak = []
       end
     end
 
-    streaks << streak if streak.length > 1
-    render json: { streaks: streaks.map { |s| { start: s.first, end: s.last } } }
+    # Handle potential streak at the end
+    if current_streak.length > 1
+      all_streaks << { start: current_streak.first, end: current_streak.last }
+    end
+
+    render json: { streaks: all_streaks }
   end
+
 
 end
