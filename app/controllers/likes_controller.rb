@@ -47,5 +47,22 @@ class LikesController < ApplicationController
     render json: { streaks: all_streaks }
   end
 
+  def create
+    user    = request.headers["X-User"]
+    post_id = params[:post_id]
+
+    # Check if the user has already liked the post
+    existing_like = Like.find_by(post_id: post_id, user: user)
+    if existing_like
+      render json: { status: 'error', message: 'You have already liked this post' }, status: :conflict and return
+    end
+
+    # Create the like
+    Like.create!(post_id: post_id, user: user, date: Date.today)
+
+    render json: { status: 'success', message: 'Post liked successfully' }
+  rescue => e
+    render json: { status: 'error', message: e.message }, status: :internal_server_error
+  end
 
 end
