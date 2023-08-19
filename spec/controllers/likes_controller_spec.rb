@@ -39,4 +39,15 @@ RSpec.describe LikesController, type: :controller do
       end
     end
   end
+
+  describe "POST #create" do
+    it "allows a user to like a post" do
+      request.headers["X-User"] = "John"
+      post :create, params: { post_id: "4" }
+      expect(response).to be_successful
+      json = JSON.parse(response.body)
+      expect(json["status"]).to eq("success")
+      expect(Like.where(user: "John", post_id: "4").count).to eq(1)
+    end
+  end
 end
